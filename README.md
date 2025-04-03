@@ -50,7 +50,7 @@ ros2 run wamv_wayfinding robot_controller
 When the robot visits the last waypoint, it will stop moving.
 
 
-If you want start accumulating the lidar data to get a point cloud from the seafloor:
+If you want start accumulating the LiDAR data to get a point cloud from the seafloor:
 
 ```bash
 ros2 run wamv_wayfinding pointcloud_saver 
@@ -62,4 +62,11 @@ To save the data on a PCD file:
 ros2 topic pub --once /save_pointcloud std_msgs/msg/Bool "data: true"
 ```
 
-The data will be saved in the `output.pcd` file.
+By default, the data will be saved in the `pointcloud.pcd` file.
+
+If you want to specify the file to save the data:
+
+```bash
+ros2 run wamv_wayfinding pointcloud_saver --ros-args -p output_file:=/path/to/file.pcd
+```
+
