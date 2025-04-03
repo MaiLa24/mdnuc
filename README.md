@@ -70,3 +70,30 @@ If you want to specify the file to save the data:
 ros2 run wamv_wayfinding pointcloud_saver --ros-args -p output_file:=/path/to/file.pcd
 ```
 
+### nuc_client
+
+This package is meant to be used along with the package [nuc_ros2](https://github.com/ZJUTongYang/nuc_ros2).
+
+If we have the nuc_ros server operational, we can run the nuc_client node to send the desired mesh and get a path to that mesh. By default the mesh is `meshes/pasaia_seafloor_small.stl`:
+
+```bash
+ros2 run nuc_client nuc_client
+```
+
+If you want to specify the mesh to send:
+
+```bash
+ros2 run nuc_client nuc_client --ros-args -p mesh_path:=/path/to/mesh.stl
+```
+
+It is recommended the use of rosbag to save the message send by the server, since calculations can be very slow depending on the mesh size. The easiest way would be:
+
+```bash
+ros2 bag record /nuc_coverage_path
+```
+
+To transfer this Path class message to a txt file, the path_reader node has been developed. With this node you can indicate the desired step between each point from the beginning of the path. By default, the step would be 1 and the path would be saved in `path.txt`:
+
+```bash
+ros2 run nuc_client path_reader --ros-args -p output_file:=/path/to/file.txt range:=desired_range
+```
