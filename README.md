@@ -33,7 +33,9 @@ source install/setup.bash
 
 ## Before starting
 
-The `urdf` folder contains the model that is required for the controller to work properly.
+The `urdf` folder contains the model that is required for the controller in the wamv_wayfinding package to work properly.
+
+The `meshes` folder contains a mesh to use in with the nuc_client package.
 
 The file `waypoints.txt` is an example of a file with waypoints for the path following. For each line you have to write the `x` and `y` of the coordinates where the waypoint is located.
 
@@ -97,3 +99,25 @@ To transfer this Path class message to a txt file, the path_reader node has been
 ```bash
 ros2 run nuc_client path_reader --ros-args -p output_file:=/path/to/file.txt range:=desired_range
 ```
+
+### plugin_trajectory_following
+
+This is a plugin that is based in the Gazebo TrajectoryFollower plugin. It has been modified in two aspects:
+
+1. Instead of manually entering the waypoints one by one, a txt file is sent where each row indicates the coordinates of a waypoint.
+2. When the robot reaches the last waypoint, a message is sent to t /save_pointcloud topic. This is used in the pointcloud_saver node.
+
+The plugin must be indicated in the urdf file of the robot. For example:
+
+```
+  <gazebo>
+    <plugin name="gz::sim::systems::MyTrajectoryFollower" filename="libMyTrajectoryFollowerPlugin.so">
+      <link_name>wamv/base_link</link_name>
+      <force>600</force>
+      <torque>400</torque>
+      <waypoints_file>/path/to/waypoints.txt</waypoints_file>
+    </plugin>
+  </gazebo>
+```
+
+In the `urdf` folder, you can find a robot with the plugin already defined. Maybe you need to change the path to the txt file.
