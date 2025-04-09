@@ -1,0 +1,13 @@
+lidar:
+    - name: lidar_wamv
+      type: 1_beam
+      samples: 50
+      min_angle: ${radians(-2.5)}
+      max_angle: ${radians(2.5)}
+      x: 0.0
+      y: 0.0
+      z: 0.0
+      R: 0.0
+      P: ${radians(90)}
+      Y: ${radians(180)}
+      post_Y: 0.0

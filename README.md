@@ -4,6 +4,20 @@ This repository contains the ros2 packages created for VRX.
 
 They were created using ROS2 Humble.
 
+## Table of contents
+
+- [ros2\_packages\_vrx](#ros2_packages_vrx)
+  - [Table of contents](#table-of-contents)
+  - [TODO list](#todo-list)
+  - [Installation](#installation)
+  - [Before starting](#before-starting)
+  - [Usage](#usage)
+    - [lidar\_config](#lidar_config)
+    - [wamv\_wayfinding package](#wamv_wayfinding-package)
+    - [nuc\_client](#nuc_client)
+    - [plugin\_trajectory\_following](#plugin_trajectory_following)
+
+
 ## TODO list
 - [ ] Connect 'robot_controller' and 'pointcloud_saver' nodes.
 - [ ] Improve the rotation of the robot.
@@ -40,6 +54,18 @@ The `meshes` folder contains a mesh to use in with the nuc_client package.
 The file `waypoints.txt` is an example of a file with waypoints for the path following. For each line you have to write the `x` and `y` of the coordinates where the waypoint is located.
 
 ## Usage
+
+### lidar_config
+
+In the `lidar_config` folder, you can found 4 files. The `lidar_config.yaml` file is an example of how to define a lidar that returns 50 points and has a width of 5 degrees.
+
+The other 3 files must replace the corresponding file in the folder where the VRX repository was saved. The paths to the files are as follows:
+
+- `lidar.xacro`: /path/to/vrx/vrx_urdf/wamv_gazebo/urdf/components/lidar.xacro
+- `numeric.yaml`: /path/to/vrx/vrx_urdf/vrx_gazebo/config/wamv_config/component_compliance/numeric.yaml
+- `wamv_planar_lidar.xacro`: /path/to/vrx/vrx_urdf/wamv_gazebo/urdf/components/wamv_planar_lidar.xacro
+
+Once the files are replaced, you can run the VRX `generate_wamv.launch.py` script with the new lidar configuration to obtain a lidar with a single line of points, with the desired angle and samples. In the [VRX tutorial](https://github.com/osrf/vrx/wiki/generate_wamv_tutorial) you can find an example of how to use this script.
 
 ### wamv_wayfinding package 
 
