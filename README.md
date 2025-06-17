@@ -16,6 +16,7 @@ They were created using ROS2 Humble.
     - [wamv\_wayfinding package](#wamv_wayfinding-package)
     - [nuc\_client](#nuc_client)
     - [plugin\_trajectory\_following](#plugin_trajectory_following)
+    - [utils](#utils)
 
 
 ## TODO list
@@ -23,6 +24,8 @@ They were created using ROS2 Humble.
 - [ ] Improve the rotation of the robot.
 - [ ] Launcher.
 - [ ] Add options to the commandline (txt file, pcd file)
+- [ ] Update nuc_client
+- [ ] Update wamv_wayfinding
   
 ## Installation
 
@@ -147,3 +150,7 @@ The plugin must be indicated in the urdf file of the robot. For example:
 ```
 
 In the `urdf` folder, you can find a robot with the plugin already defined. Maybe you need to change the path to the txt file.
+
+### utils
+
+This folder contains utility Python scripts and helper functions that support the main functionality of the project. These scripts are not ROS nodes, but they provide reusable tools for tasks such as mesh processing and data transformation. You can import these utilities in your ROS nodes or use them as standalone scripts to streamline development and testing.
