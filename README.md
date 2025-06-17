@@ -153,4 +153,4 @@ In the `urdf` folder, you can find a robot with the plugin already defined. Mayb
 
 ### utils
 
-This folder contains utility Python scripts and helper functions that support the main functionality of the project. These scripts are not ROS nodes, but they provide reusable tools for tasks such as mesh processing and data transformation. You can import these utilities in your ROS nodes or use them as standalone scripts to streamline development and testing.
+This folder contains utility Python scripts and helper functions that support the main functionality of the project. These scripts are not ROS nodes, but they provide reusable tools for tasks such as mesh processing and grid generation. You can import these utilities in your ROS nodes or use them as standalone scripts to streamline development and testing.
