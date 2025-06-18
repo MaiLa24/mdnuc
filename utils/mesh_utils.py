@@ -182,12 +182,13 @@ def create_grid_from_mesh_shapely(mesh_path, csv_path, cell_size=0.10):
 
 
 
-def visualize_grid(grid_path):
+def visualize_grid(grid_path, interval=None):
     """
     Given a grid, visualizes it using matplotlib.
 
     Args:
         grid_path: The path to a CSV file.
+        interval: Tuple with the wanted vmin and vmax. In case of None, the interval would be between 0 and maximum.
 
     Returns:
         A visualization of the specified grid.
@@ -206,12 +207,14 @@ def visualize_grid(grid_path):
     # Visualization
     plt.figure(figsize=(8, 8))
     masked_hits = np.ma.masked_where(grid < 0, grid)
+    if interval == None:
+        interval = (0, np.max(masked_hits))
     plt.imshow(masked_hits, origin='lower',
             extent=[x_coords[0] - 0.05, x_coords[-1] + 0.05,
                     y_coords[0] - 0.05, y_coords[-1] + 0.05],
             cmap='hot',
-            vmin=0,
-            vmax=np.max(masked_hits)
+            vmin=interval[0],
+            vmax=interval[1]
         )
     plt.colorbar(label='Muestreos por celda')
     plt.xlabel('X (m)')
@@ -221,5 +224,3 @@ def visualize_grid(grid_path):
     plt.grid(True)
     plt.legend()
     plt.show()
-
-
