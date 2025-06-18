@@ -115,7 +115,7 @@ def plane_and_remesh(mesh_path, output_path, remesh_size):
     o3d.io.write_triangle_mesh(output_path, mesh_modified)
 
 
-def create_grid_from_mesh_shapely(mesh_path, csv_path, cell_size=0.10):
+def create_grid_from_mesh_shapely(mesh_path, csv_path, cell_size=0.10, xlim=None, ylim=None):
     """
     Given a mesh and a cell size, creates a grid with -1 values outside the mesh and 0 inside.
 
@@ -123,6 +123,8 @@ def create_grid_from_mesh_shapely(mesh_path, csv_path, cell_size=0.10):
         mesh_path: The path to the mesh.
         csv_path: The path to save the grid as a CSV file. 
         cell_size: Size of the cells in the grid.
+        xlim: A tuple (min_x, max_x) specifying the horizontal (X-axis) range to focus on. If None, the full X range of the mesh will be used.
+        ylim: A tuple (min_y, max_y) specifying the horizontal (Y-axis) range to focus on. If None, the full Y range of the mesh will be used.
 
     Returns:
         Saves the grid in a CSV file.
@@ -135,6 +137,11 @@ def create_grid_from_mesh_shapely(mesh_path, csv_path, cell_size=0.10):
     # Bounding box of the area
     min_x, min_y = vertices_2d.min(axis=0)
     max_x, max_y = vertices_2d.max(axis=0)
+
+    if xlim is not None:
+        min_x, max_x = xlim
+    if ylim is not None:
+        min_y, max_y = ylim
 
     nx = int((max_x - min_x) / cell_size) + 1
     ny = int((max_y - min_y) / cell_size) + 1
