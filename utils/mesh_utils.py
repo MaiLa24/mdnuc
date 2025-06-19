@@ -187,6 +187,29 @@ def create_grid_from_mesh_shapely(mesh_path, csv_path, cell_size=0.10, xlim=None
     # Saves the grid in a CSV file.
     df.to_csv(csv_path, index=False)
 
+def load_grid(grid_path):
+    """
+    Given a CSV file, loads the grid.
+
+    Args:
+        grid_path: The path to a CSV file.
+
+    Returns:
+        grid: The grid.
+        x_coords:  Coordenadas x ordenadas.
+        y_coords : Coordenadas y ordenadas.
+    """
+    df = pd.read_csv(grid_path)
+        
+    x_coords = np.sort(df["x"].unique())
+    y_coords = np.sort(df["y"].unique())
+
+    grid_df = df.pivot_table(index="y", columns="x", values="hits", fill_value=-1)
+
+    grid_df = grid_df.reindex(index=y_coords, columns=x_coords)
+    grid = grid_df.to_numpy()
+
+    return grid, x_coords, y_coords
 
 
 def visualize_grid(grid_path, interval=None):
@@ -201,15 +224,7 @@ def visualize_grid(grid_path, interval=None):
         A visualization of the specified grid.
     """
     # Load grid
-    df = pd.read_csv(grid_path)
-        
-    x_coords = np.sort(df["x"].unique())
-    y_coords = np.sort(df["y"].unique())
-
-    grid_df = df.pivot_table(index="y", columns="x", values="hits", fill_value=-1)
-
-    grid_df = grid_df.reindex(index=y_coords, columns=x_coords)
-    grid = grid_df.to_numpy()
+    grid, x_coords, y_coords = load_grid(grid_path)
 
     # Visualization
     plt.figure(figsize=(8, 8))
@@ -231,3 +246,27 @@ def visualize_grid(grid_path, interval=None):
     plt.grid(True)
     plt.legend()
     plt.show()
+
+def grid_coverage_overlap(grid_path):
+    """
+    Given a grid, calculates the coverage and overlap.
+
+    Args:
+        grid_path: The path to a CSV file.
+
+    Returns:
+        Prints the info.
+    """
+    grid, _, _ = load_grid(grid_path)
+
+
+    covered_cells = np.sum(grid >= 1)
+    total_samples = np.sum(grid[grid >= 0])
+    total_valid_cells = np.sum(grid >= 0)
+
+    coverage = (covered_cells / total_valid_cells) * 100
+    percent_overlap = np.sum(grid > 1) / total_valid_cells * 100
+
+    print(f"Coverage: {coverage:.2f}%")
+    print(f"Overlapping: {percent_overlap:.2f}%")
+
