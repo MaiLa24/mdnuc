@@ -270,3 +270,54 @@ def grid_coverage_overlap(grid_path):
     print(f"Coverage: {coverage:.2f}%")
     print(f"Overlapping: {percent_overlap:.2f}%")
 
+
+
+def merge_grids(paths, csv_path):
+    """    
+    Merge grids from CSV files. The grids must be from the same area.
+
+    Args:
+        paths (list of str): Paths to CSV.
+        csv_path: The path to save the merged grid.
+
+    Returns:
+        Saves the merged grid in a CSV file.
+    """
+    if not paths:
+        raise ValueError("The list of paths is empty")
+
+    # Read the grids
+    grids = [load_grid(path)[0] for path in paths]
+
+    mask = (grids[0] == -1)
+    
+    grid_merged = np.zeros_like(grids[0], dtype=int)
+    
+    for grid in grids:
+        grid_merged += np.where(grid == -1, 0, grid).astype(int)  # If grid[i] == -1 -> sum 0, if grid[i] != -1, sum the original value.
+
+    # We restore the -1
+    grid_merged[mask] = -1
+
+    ny, nx = grid_merged.shape
+    x_coords = np.arange(nx)
+    y_coords = np.arange(ny)
+
+    # Transforms the data to a pandas Dataframe.
+    data = []
+    for i in range(ny):
+        for j in range(nx):
+            if grid_merged[i, j] >= 0:
+                data.append({
+                    "x": x_coords[j],
+                    "y": y_coords[i],
+                    "hits": grid_merged[i, j]
+                })
+
+    df = pd.DataFrame(data)
+
+    # Saves the grid in a CSV file.
+    df.to_csv(csv_path, index=False)
+
+
+
