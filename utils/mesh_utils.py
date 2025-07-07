@@ -196,8 +196,8 @@ def load_grid(grid_path):
 
     Returns:
         grid: The grid.
-        x_coords:  Coordenadas x ordenadas.
-        y_coords : Coordenadas y ordenadas.
+        x_coords:  Ordered x-coordinates.
+        y_coords : Ordered y-coordinates.
     """
     df = pd.read_csv(grid_path)
         
@@ -238,10 +238,10 @@ def visualize_grid(grid_path, interval=None):
             vmin=interval[0],
             vmax=interval[1]
         )
-    plt.colorbar(label='Muestreos por celda')
+    plt.colorbar(label='Samples per cell')
     plt.xlabel('X (m)')
     plt.ylabel('Y (m)')
-    plt.title('Cobertura y densidad de muestreo')
+    plt.title('Sampling coverage and density')
     plt.axis('equal')
     plt.grid(True)
     plt.legend()
@@ -320,4 +320,18 @@ def merge_grids(paths, csv_path):
     df.to_csv(csv_path, index=False)
 
 
+
+#create_grid_from_mesh_shapely('/home/mlarrazabal/my_packages/pasaia_seafloor_tests_aplanado.obj', 
+#                            '/home/mlarrazabal/my_packages/bathymetryc_grid_tests_triangle.csv', cell_size=0.10, xlim=(0, 100), ylim=(160, 300))
+#visualize_grid('/home/mlarrazabal/my_packages/baths and pointclouds/bath_1m_15-30.csv', (0,2))
+
+#grid_coverage_overlap('/home/mlarrazabal/my_packages/bathymetryc_grid_tests_triangle.csv')
+
+#common1 = '/home/mlarrazabal/my_packages/b_corrected_mdnuc_50cm_'
+#common2 = '.csv'
+#paths = [common1 + '-15-0_big' + common2, common1 + '-15-0_medium' + common2, common1 + '-15-0_small' + common2, common1 + '-30-15' + common2]
+#
+#merge_grids(paths, '/home/mlarrazabal/my_packages/b_corrected_mdnuc_50cm_merged.csv')
+#grid_coverage_overlap('/home/mlarrazabal/my_packages/b_corrected_mdnuc_50cm_merged.csv')
+visualize_grid('/home/mlarrazabal/my_packages/b_corrected_mdnuc_10cm_merged.csv', (0,2))
 
