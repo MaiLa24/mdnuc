@@ -6,6 +6,7 @@ from scipy.spatial import cKDTree
 from shapely.geometry import Polygon, Point
 from shapely.ops import unary_union
 import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm, PowerNorm, BoundaryNorm, ListedColormap
 
 def label_flattened_by_original_heights(original_mesh_path, flattened_mesh_path, height_intervals):
     """
@@ -212,13 +213,14 @@ def load_grid(grid_path):
     return grid, x_coords, y_coords
 
 
-def visualize_grid(grid_path, interval=None):
+def visualize_grid(grid_path, interval=None, paths=None):
     """
     Given a grid, visualizes it using matplotlib.
 
     Args:
         grid_path: The path to a CSV file.
         interval: Tuple with the wanted vmin and vmax. In case of None, the interval would be between 0 and maximum.
+        paths: List of tuples (x, y) of paths to be displayed on top of the grid.
 
     Returns:
         A visualization of the specified grid.
@@ -227,17 +229,36 @@ def visualize_grid(grid_path, interval=None):
     grid, x_coords, y_coords = load_grid(grid_path)
 
     # Visualization
-    plt.figure(figsize=(8, 8))
+    plt.figure(figsize=(40, 30))
+
     masked_hits = np.ma.masked_where(grid < 0, grid)
     if interval == None:
         interval = (0, np.max(masked_hits))
+        max_val = int(np.max(masked_hits))
+    else:
+        max_val = int(interval[1])
+    n_variable = max(0, max_val - 1)  # We use other colors for values 0 and 1.
+    blues = plt.get_cmap('Blues', 256)
+    blues_dark = blues(np.linspace(0.5, 1.0, n_variable))
+    custom_colors = [
+        '#FF0000',  # red
+        '#FFFF00'   # yellow
+    ]
+
+    # Combine: [rojo, amarillo] + darker toner of Blues scheme
+    all_colors = custom_colors + list(blues_dark)
+    cmap = ListedColormap(all_colors)
     plt.imshow(masked_hits, origin='lower',
             extent=[x_coords[0] - 0.05, x_coords[-1] + 0.05,
                     y_coords[0] - 0.05, y_coords[-1] + 0.05],
-            cmap='hot',
             vmin=interval[0],
-            vmax=interval[1]
+            vmax=interval[1],
+            cmap='jet'
         )
+    if not paths == None:
+        for x, y in paths:
+            plt.plot(x, y, color='green', linewidth=0.03, marker='o', label='Path')
+
     plt.colorbar(label='Samples per cell')
     plt.xlabel('X (m)')
     plt.ylabel('Y (m)')
@@ -300,8 +321,9 @@ def merge_grids(paths, csv_path):
     grid_merged[mask] = -1
 
     ny, nx = grid_merged.shape
-    x_coords = np.arange(nx)
-    y_coords = np.arange(ny)
+    first_df = pd.read_csv(paths[0])
+    x_coords = sorted(first_df["x"].unique())
+    y_coords = sorted(first_df["y"].unique())
 
     # Transforms the data to a pandas Dataframe.
     data = []
@@ -318,20 +340,4 @@ def merge_grids(paths, csv_path):
 
     # Saves the grid in a CSV file.
     df.to_csv(csv_path, index=False)
-
-
-
-#create_grid_from_mesh_shapely('/home/mlarrazabal/my_packages/pasaia_seafloor_tests_aplanado.obj', 
-#                            '/home/mlarrazabal/my_packages/bathymetryc_grid_tests_triangle.csv', cell_size=0.10, xlim=(0, 100), ylim=(160, 300))
-#visualize_grid('/home/mlarrazabal/my_packages/baths and pointclouds/bath_1m_15-30.csv', (0,2))
-
-#grid_coverage_overlap('/home/mlarrazabal/my_packages/bathymetryc_grid_tests_triangle.csv')
-
-#common1 = '/home/mlarrazabal/my_packages/b_corrected_mdnuc_50cm_'
-#common2 = '.csv'
-#paths = [common1 + '-15-0_big' + common2, common1 + '-15-0_medium' + common2, common1 + '-15-0_small' + common2, common1 + '-30-15' + common2]
-#
-#merge_grids(paths, '/home/mlarrazabal/my_packages/b_corrected_mdnuc_50cm_merged.csv')
-#grid_coverage_overlap('/home/mlarrazabal/my_packages/b_corrected_mdnuc_50cm_merged.csv')
-visualize_grid('/home/mlarrazabal/my_packages/b_corrected_mdnuc_10cm_merged.csv', (0,2))
 
