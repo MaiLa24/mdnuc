@@ -34,7 +34,7 @@ They were created using ROS2 Humble.
   - [x] Update pointlocud saver.
 - [ ] Add nuc_ros2 modified (mdnuc_ros2).
 - [x] Update trajectory follower.
-- [ ] Update utils to generate walls and doors.
+- [x] Update utils to generate walls and doors.
   
 ## Installation
 

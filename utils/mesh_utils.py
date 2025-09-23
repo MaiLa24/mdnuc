@@ -96,22 +96,46 @@ def label_flattened_by_original_heights(original_mesh_path, flattened_mesh_path,
         selected_faces = triangles_flat[face_mask]
 
         if len(selected_faces) == 0:
-            submeshes.append(o3d.geometry.TriangleMesh())
-            continue
+            continue  # No mesh to add
 
-        # Find the unique vertices used in these faces.
+        # Find unique vertices used in these faces
         unique_vertices, inverse_indexes = np.unique(selected_faces.flatten(), return_inverse=True)
         new_vertices = vertices_flat[unique_vertices]
         new_faces = inverse_indexes.reshape((-1, 3))
 
-        # Create new TriangleMesh
-        mesh = o3d.geometry.TriangleMesh()
-        mesh.vertices = o3d.utility.Vector3dVector(new_vertices)
-        mesh.triangles = o3d.utility.Vector3iVector(new_faces)
-        mesh.compute_vertex_normals()
+        # Create a temporary mesh
+        temp_mesh = o3d.geometry.TriangleMesh()
+        temp_mesh.vertices = o3d.utility.Vector3dVector(new_vertices)
+        temp_mesh.triangles = o3d.utility.Vector3iVector(new_faces)
+        temp_mesh.compute_vertex_normals()
 
-        submeshes.append(mesh)
-        
+        # Detect connected components
+        triangle_clusters, cluster_n_triangles, _ = temp_mesh.cluster_connected_triangles()
+        triangle_clusters = np.asarray(triangle_clusters)
+
+        n_clusters = triangle_clusters.max() + 1
+
+        # Create submesh for each cluster
+        for cluster_idx in range(n_clusters):
+            cluster_mask = triangle_clusters == cluster_idx
+            cluster_faces = np.asarray(temp_mesh.triangles)[cluster_mask]
+
+            if len(cluster_faces) == 0:
+                continue
+
+            # Find unique vertices in this cluster
+            unique_cluster_vertices, cluster_inverse = np.unique(cluster_faces.flatten(), return_inverse=True)
+            cluster_vertices = np.asarray(temp_mesh.vertices)[unique_cluster_vertices]
+            cluster_faces = cluster_inverse.reshape((-1, 3))
+
+            # Build final mesh
+            cluster_mesh = o3d.geometry.TriangleMesh()
+            cluster_mesh.vertices = o3d.utility.Vector3dVector(cluster_vertices)
+            cluster_mesh.triangles = o3d.utility.Vector3iVector(cluster_faces)
+            cluster_mesh.compute_vertex_normals()
+
+            submeshes.append(cluster_mesh)
+
     #plot_submeshes(submeshes)
 
     return submeshes
@@ -153,6 +177,186 @@ def plane_and_remesh(mesh_path, output_path, remesh_size):
     # Save the modified mesh.
     o3d.io.write_triangle_mesh(output_path, mesh_modified)
 
+def open3d_to_trimesh(o3d_mesh):
+    """
+    Converts an Open3D mesh to a Trimesh mesh.
+
+    Args:
+        o3d_mesh: The Open3D mesh.
+
+    Returns:
+        The equivalent Trimesh mesh.
+    """
+    vertices = np.asarray(o3d_mesh.vertices)
+    faces = np.asarray(o3d_mesh.triangles)
+    return trimesh.Trimesh(vertices=vertices, faces=faces, process=False)
+
+
+def get_shared_edges_by_position(mesh1: trimesh.Trimesh, mesh2: trimesh.Trimesh, mesh_original: trimesh.Trimesh, tol=1e-6):
+    """
+    Find shared edges between two meshes by comparing the 3D positions of the vertices.
+    Use the original mesh to calculate the inclination relative to the Z axis of the faces associated with those edges.
+    Returns a set of frozensets, where each frozenset contains two tuples (x, y, z).
+
+    Args:
+        mesh1: The first mesh.
+        mesh2: The second mesh.
+        mesh_original: The original mesh to calculate the inclination.
+        tol: Tolerance for considering vertices as identical.
+    Returns:
+        blocked_edges: Set of edges that should be blocked (shared edges except the door edge).
+        door_edges: Set with the edge that should be the door (the one on the face with the smallest slope on the Z axis).
+    """
+
+    def round_vertex(v):
+        """
+        Rounds the vertex coordinates to a specified tolerance.
+        This helps in comparing vertices that are very close to each other.
+
+        Args:
+            v: The vertex to round.
+
+        Returns:
+            The rounded vertex as a tuple.
+        """
+        return tuple(np.round(v, decimals=int(-np.log10(tol))))
+
+    def get_edges_by_position(mesh):
+        """
+        Creates a mapping of edges based on the rounded positions of their vertices.
+
+        Args:
+            mesh: The mesh to process.
+
+        Returns:
+            A dictionary mapping frozensets of rounded vertex positions to edge indices.
+        """
+        vertices = mesh.vertices
+        edges = mesh.edges_unique
+
+        edge_map = dict()
+        for edge in edges:
+            v0 = round_vertex(vertices[edge[0]])
+            v1 = round_vertex(vertices[edge[1]])
+            key = frozenset([v0, v1])
+            edge_map[key] = edge
+        return edge_map
+        
+
+    # Create KDTree in 2D (X, Y) for the original mesh
+    original_xy = mesh_original.vertices[:, :2]
+    original_tree = cKDTree(original_xy)
+
+    def find_faces_for_edge_in_original_soft(edge_key, k=10):
+        """
+        Finds faces in the original mesh that contain vertices close to the edge defined by edge_key.
+        Uses a soft approach by looking for the k nearest vertices in the original mesh.
+
+        Args:
+            edge_key: A frozenset containing two vertex positions defining the edge.
+            k: Number of nearest neighbors to consider.
+
+        Returns:
+            A list of face indices in the original mesh that contain vertices close to the edge.
+        """
+        v0, v1 = list(edge_key)
+        v0_xy = np.array(v0[:2])
+        v1_xy = np.array(v1[:2])
+
+        # Get k nearest neighbors in XY (without filtering by distance)
+        radius = np.linalg.norm(v0_xy - v1_xy) * 0.6  # Radius proportional to the length of the edge
+
+        idxs_v0 = original_tree.query_ball_point(v0_xy, r=radius)
+        idxs_v1 = original_tree.query_ball_point(v1_xy, r=radius)
+
+
+        # Ensure that they are two-dimensional arrays
+        idxs_v0 = np.atleast_1d(idxs_v0)
+        idxs_v1 = np.atleast_1d(idxs_v1)
+        
+        # Search for faces that contain any of the vertices
+        faces_v0 = np.where(np.isin(mesh_original.faces, idxs_v0).any(axis=1))[0]
+        faces_v1 = np.where(np.isin(mesh_original.faces, idxs_v1).any(axis=1))[0]
+
+        # IIntersection: faces containing at least one vertex of v0 and one of v1
+        common_faces = np.intersect1d(faces_v0, faces_v1)
+
+        return common_faces
+
+
+
+    def min_inclination_z(shared_keys):
+        """
+        Finds the edge among shared_keys that is on the face with the minimum inclination relative to the Z axis.
+
+        Args:
+            shared_keys: Set of frozensets representing shared edges.
+
+        Returns:
+            The edge (as a frozenset) with the minimum inclination.
+        """
+        min_inclination = float('inf')
+        min_edge = None
+
+        for edge_key in shared_keys:
+            inclinations = []
+
+            faces = find_faces_for_edge_in_original_soft(edge_key, k=10)
+            for face_idx in faces:
+                normal = mesh_original.face_normals[face_idx]
+                inclination = abs(normal[2])  # Z component of the normal
+                inclinations.append(inclination)
+
+            if inclinations:
+                min_face_incl = min(inclinations)
+                if min_face_incl < min_inclination:
+                    min_inclination = min_face_incl
+                    min_edge = edge_key
+
+        return min_edge
+
+
+    # Obtain edge maps by position
+    edges1 = get_edges_by_position(mesh1)
+    edges2 = get_edges_by_position(mesh2)
+
+    shared_keys = set(edges1.keys()) & set(edges2.keys())
+    print(f"Total shared edges found: {len(shared_keys)}")
+
+    if not shared_keys:
+        print(shared_keys)
+        return shared_keys, shared_keys
+
+    # Select the edge to be removed (the one most perpendicular to the Z axis in the original mesh).
+    edge_to_remove = min_inclination_z(shared_keys)
+
+    if edge_to_remove:
+        shared_keys.remove(edge_to_remove)
+
+    blocked_edges = shared_keys
+    door_edges = {edge_to_remove} if edge_to_remove else set()
+
+    return blocked_edges, door_edges
+
+def save_shared_edges_to_txt(shared_edges, filename="shared_edges.txt"):
+    """
+    Saves the shared edges to a text file.
+
+    Args:
+        shared_edges: Set of edges to save.
+        filename: The name of the output text file.
+    """
+    with open(filename, "w") as f:
+        for edge in shared_edges:
+            v1, v2 = list(edge)
+
+            # Format to text with clean decimals
+            v1_str = f"({v1[0]:.6f}, {v1[1]:.6f}, {v1[2]:.6f})"
+            v2_str = f"({v2[0]:.6f}, {v2[1]:.6f}, {v2[2]:.6f})"
+
+            f.write(f"{v1_str} - {v2_str}\n")
+
+    print(f"Data stored in {filename}")
 
 def create_grid_from_mesh_shapely(mesh_path, csv_path, cell_size=0.10, xlim=None, ylim=None):
     """
@@ -279,11 +483,11 @@ def visualize_grid(grid_path, interval=None, paths=None):
     blues = plt.get_cmap('Blues', 256)
     blues_dark = blues(np.linspace(0.5, 1.0, n_variable))
     custom_colors = [
-        '#7A8096',  # black
-        '#C4B385'   # light grey
+        '#7A8096',  # 0 coverage
+        '#C4B385'   # 1 coverage
     ]
 
-    # Combine: [rojo, amarillo] + darker toner of Blues scheme
+    # Combine: [0, 1] + darker toner of Blues scheme
     all_colors = custom_colors + list(blues_dark)
     cmap = ListedColormap(all_colors)
     plt.imshow(masked_hits, origin='lower',
@@ -303,17 +507,9 @@ def visualize_grid(grid_path, interval=None, paths=None):
 
     plt.xticks([])
     plt.yticks([])
-
-    # Eliminar el grid
     plt.grid(False)
-
-    #plt.colorbar(label='Samples per cell')
-    #plt.xlabel('X (m)')
-    #plt.ylabel('Y (m)')
-    #plt.title('Sampling coverage and density')
     plt.axis('equal')
     plt.grid(False)
-    #plt.legend().remove
     plt.show()
 
 def grid_coverage_overlap(grid_path):
