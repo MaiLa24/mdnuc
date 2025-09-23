@@ -16,8 +16,8 @@ class RobotController(Node):
         super().__init__('robot_controller')
 
         # Declare the file parameter with the waypoints
-        self.declare_parameter('file', 'waypoints.txt')
-        self.file_path = self.get_parameter('file').get_parameter_value().string_value
+        self.declare_parameter('waypoint_file', 'waypoints.txt')
+        self.file_path = self.get_parameter('waypoint_file').get_parameter_value().string_value
 
         # Subscribe to the odometry topic
         self.subscription = self.create_subscription(

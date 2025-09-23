@@ -13,10 +13,11 @@ They were created using ROS2 Humble.
   - [Before starting](#before-starting)
   - [Usage](#usage)
     - [lidar\_config](#lidar_config)
-    - [wamv\_wayfinding package](#wamv_wayfinding-package)
-    - [nuc\_client](#nuc_client)
-    - [plugin\_trajectory\_following](#plugin_trajectory_following)
-    - [utils](#utils)
+    - [Packages](#packages)
+      - [wamv\_wayfinding package](#wamv_wayfinding-package)
+      - [nuc\_client](#nuc_client)
+      - [plugin\_trajectory\_following](#plugin_trajectory_following)
+      - [utils](#utils)
 
 
 ## TODO list
@@ -24,8 +25,17 @@ They were created using ROS2 Humble.
 - [ ] Improve the rotation of the robot.
 - [ ] Launcher.
 - [ ] Add options to the commandline (txt file, pcd file)
+- [ ] Update urdf with the new trajectory follower.
 - [ ] Update nuc_client
+  - [ ] Add smoother
+  - [ ] Add mdbaf
+  - [ ] Add walls and doors
 - [ ] Update wamv_wayfinding
+  - [ ] Add lidar_filter
+  - [x] Update pointlocud saver
+- [ ] Add nuc_ros2 modified (mdnuc_ros2)
+- [ ] Update trajectory follower
+- [ ] Update utils to generate walls and doors
   
 ## Installation
 
@@ -70,87 +80,31 @@ The other 3 files must replace the corresponding file in the folder where the VR
 
 Once the files are replaced, you can run the VRX `generate_wamv.launch.py` script with the new lidar configuration to obtain a lidar with a single line of points, with the desired angle and samples. In the [VRX tutorial](https://github.com/osrf/vrx/wiki/generate_wamv_tutorial) you can find an example of how to use this script.
 
-### wamv_wayfinding package 
+### Packages
 
-If you want to follow the path of the waypoints defined in the txt file:
+Each package will have each Readme explaining in more detail the usage.
 
-```bash
-ros2 run wamv_wayfinding robot_controller 
-```
+#### wamv_wayfinding package 
 
-When the robot visits the last waypoint, it will stop moving.
+In this package, you will find useful ROS2 nodes for obtaining information from VRX simulations. The ROS2 nodes are:
 
+- Pointcloud saver: To get information from the LiDAR simulating a single-beam sonar. With this information, updates the grid of the mesh and saves the resulting pointcloud.
+- Robot controller: To control the USV.
 
-If you want start accumulating the LiDAR data to get a point cloud from the seafloor:
+#### nuc_client
 
-```bash
-ros2 run wamv_wayfinding pointcloud_saver 
-```
+This package is meant to be used along with the package [mdnuc_ros2](./mdnuc_ros2) which is based on the package [nuc_ros2](https://github.com/ZJUTongYang/nuc_ros2).
 
-To save the data on a PCD file:
+In this package, you would find useful nodes to create the robot's path.
 
-```bash
-ros2 topic pub --once /save_pointcloud std_msgs/msg/Bool "data: true"
-```
-
-By default, the data will be saved in the `pointcloud.pcd` file.
-
-If you want to specify the file to save the data:
-
-```bash
-ros2 run wamv_wayfinding pointcloud_saver --ros-args -p output_file:=/path/to/file.pcd
-```
-
-### nuc_client
-
-This package is meant to be used along with the package [nuc_ros2](https://github.com/ZJUTongYang/nuc_ros2).
-
-If we have the nuc_ros server operational, we can run the nuc_client node to send the desired mesh and get a path to that mesh. By default the mesh is `meshes/pasaia_seafloor_small.stl`:
-
-```bash
-ros2 run nuc_client nuc_client
-```
-
-If you want to specify the mesh to send:
-
-```bash
-ros2 run nuc_client nuc_client --ros-args -p mesh_path:=/path/to/mesh.stl
-```
-
-It is recommended the use of rosbag to save the message send by the server, since calculations can be very slow depending on the mesh size. The easiest way would be:
-
-```bash
-ros2 bag record /nuc_coverage_path
-```
-
-To transfer this Path class message to a txt file, the path_reader node has been developed. With this node you can indicate the desired step between each point from the beginning of the path. By default, the step would be 1 and the path would be saved in `path.txt`:
-
-```bash
-ros2 run nuc_client path_reader --ros-args -p output_file:=/path/to/file.txt range:=desired_range
-```
-
-### plugin_trajectory_following
+#### plugin_trajectory_following
 
 This is a plugin that is based in the Gazebo TrajectoryFollower plugin. It has been modified in two aspects:
 
-1. Instead of manually entering the waypoints one by one, a txt file is sent where each row indicates the coordinates of a waypoint.
-2. When the robot reaches the last waypoint, a message is sent to t /save_pointcloud topic. This is used in the pointcloud_saver node.
+1. Instead of manually entering the waypoints one by one, a txt file is sent where each row indicates the coordinates of a waypoint (x, y).
+2. When the robot reaches the last waypoint, a message is sent to the /save_pointcloud topic. This is used in the pointcloud_saver node in the wamv_wayinding package.
+3. There is a new parameter called `doors_file`. This parameter is used in the lidar_filter node of the wamv_wayfinding package to notify when to change the LiDAR angle.
 
-The plugin must be indicated in the urdf file of the robot. For example:
-
-```
-  <gazebo>
-    <plugin name="gz::sim::systems::MyTrajectoryFollower" filename="libMyTrajectoryFollowerPlugin.so">
-      <link_name>wamv/base_link</link_name>
-      <force>600</force>
-      <torque>400</torque>
-      <waypoints_file>/path/to/waypoints.txt</waypoints_file>
-    </plugin>
-  </gazebo>
-```
-
-In the `urdf` folder, you can find a robot with the plugin already defined. Maybe you need to change the path to the txt file.
-
-### utils
+#### utils
 
 This folder contains utility Python scripts and helper functions that support the main functionality of the project. These scripts are not ROS nodes, but they provide reusable tools for tasks such as mesh processing and grid generation. You can import these utilities in your ROS nodes or use them as standalone scripts to streamline development and testing.

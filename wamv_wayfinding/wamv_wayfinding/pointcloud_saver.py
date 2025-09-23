@@ -8,6 +8,7 @@ import open3d as o3d
 import sensor_msgs_py.point_cloud2 as pc2
 import math
 from pyquaternion import Quaternion
+import pandas as pd
 
 LIDAR_ROLL = math.pi # Roll angle of the LiDAR
 LIDAR_PITCH = math.pi/ 2 # Pitch angle of the LiDAR
@@ -18,16 +19,27 @@ class PoincloudSaver(Node):
     def __init__(self):
         super().__init__('pointcloud_saver')
 
-        self.pointcloud_data = np.empty((0, 3), dtype=float)
+        self.pointcloud_data = np.empty((0, 4), dtype=float) # x y z timestamp
 
         # The file where we want to save the pointcloud
-        self.declare_parameter('output_file', 'pointcloud.pcd')
-        self.output_file = self.get_parameter('output_file').get_parameter_value().string_value
+        self.declare_parameter('pointcloud_waypoint_file', 'pointcloud.csv')
+        self.pointcloud_waypoint_file = self.get_parameter('pointcloud_waypoint_file').get_parameter_value().string_value
+
+        # Grid file if needed
+        self.declare_parameter('grid_file', "")
+        self.grid_file = self.get_parameter('grid_file').get_parameter_value().string_value
+
+        # The desired pointcloud message
+        self.declare_parameter('desired_pointcloud_topic', '/filtered_pointcloud')
+        self.desired_pointcloud_topic = self.get_parameter('desired_pointcloud_topic').get_parameter_value().string_value
+
+        if self.grid_file != "":
+            self.load_grid_from_csv(self.grid_file)
 
         # Subscription to the desired topics: 
         self.subscription = self.create_subscription(
             PointCloud2,
-            '/wamv/sensors/lidars/multibeam_sensor_lidar_wamv/points',
+            self.de,
             self.lidar_callback,
             10)
         self.create_subscription(Bool, '/save_pointcloud', self.save_pointcloud_callback, 10)
@@ -41,6 +53,53 @@ class PoincloudSaver(Node):
 
         # The matrix used to convert from the lidars coordinates system to the global coordinates system.
         self.T = None
+
+
+    def load_grid_from_csv(self, file_path):
+        df = pd.read_csv(file_path)
+        
+        # Volver a construir el grid
+        self.x_coords = np.sort(df["x"].unique())
+        self.y_coords = np.sort(df["y"].unique())
+
+        self.nx = len(self.x_coords)
+        self.ny = len(self.y_coords)
+        # Usar pivot_table para crear directamente el grid
+        grid_df = df.pivot_table(index="y", columns="x", values="hits", fill_value=-1)
+
+        # Asegurar que el orden de filas/columnas sea correcto
+        grid_df = grid_df.reindex(index=self.y_coords, columns=self.x_coords)
+
+        # Convertir a numpy array
+        self.grid = grid_df.to_numpy()
+
+        self.total_valid_cells = np.sum(self.grid >= 0)
+
+    def _nearest(self, coord_array, coord):
+        idx = (np.abs(coord_array - coord)).argmin()
+        return coord_array[idx]
+
+
+    def register_point(self, x, y):
+        j = np.where(self.x_coords == self._nearest(self.x_coords, x))[0][0]
+        i = np.where(self.y_coords == self._nearest(self.y_coords, y))[0][0]
+
+        if 0 <= i < self.ny and 0 <= j < self.nx:
+            if self.grid[i, j] >= 0:  # solo si está dentro del mapa
+                self.grid[i, j] += 1
+
+    def save_calculate_data(self):
+        # Cálculo de métricas
+        covered_cells = np.sum(self.grid >= 1)
+        total_samples = np.sum(self.grid[self.grid >= 0])
+
+        coverage = (covered_cells / self.total_valid_cells) * 100
+        overlapping = (total_samples / covered_cells - 1) if covered_cells > 0 else 0
+        percent_overlap = np.sum(self.grid > 1) / self.total_valid_cells * 100
+
+        print(f"Coverage: {coverage:.2f}%")
+        print(f"Average overlapping (redundancia): {overlapping:.2f}x")
+        print(f"Porcentaje de overlapping: {percent_overlap:.2f}%")
 
 
     def odom_callback(self, msg):
@@ -130,12 +189,21 @@ class PoincloudSaver(Node):
             return     
 
         # Perform transformation of local coordinates to global coordinates
-        pc_data = self.transform_coordinates(pc_data, self.T)
+        self.current_lidar_point = self.transform_coordinates(pc_data, self.T)
+
+        # Add timestamp to each point
+        timestamp = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9  # float seconds
+        points_with_time = np.hstack([self.current_lidar_point, np.full((self.current_lidar_point.shape[0], 1), timestamp)])
 
         # We accumulate the data from the point cloud
-        self.pointcloud_data = np.vstack([self.pointcloud_data, pc_data])        
+        self.pointcloud_data = np.vstack([self.pointcloud_data, points_with_time])        
         self.get_logger().info(f"Accumulated data: {len(self.pointcloud_data)} points")
 
+        if self.grid_file != "":
+            # We register the points in the grid
+            for point in self.current_lidar_point:
+                self.register_point(point[0], point[1])
+    
 
     def save_pointcloud_callback(self, msg: Bool):
         '''
@@ -144,17 +212,16 @@ class PoincloudSaver(Node):
 
         if msg.data:
         # If the bool message is True, we keep the point cloud
-            self.get_logger().info("Saving point cloud to PCD file...")
+            self.get_logger().info("Saving point cloud to CSV file...")
             
-            # Create an Open3D PointCloud object
-            pcd = o3d.geometry.PointCloud()
-            
-            # We convert the numpy array to a Open3D PointCloud
-            pcd.points = o3d.utility.Vector3dVector(self.pointcloud_data)
-            
-            # Save the PCD file
-            o3d.io.write_point_cloud(self.output_file, pcd)
-            self.get_logger().info("PCD file successfully saved.")
+            # Save the pointclouud to a CSV file
+            df = pd.DataFrame(self.pointcloud_data, columns=['x', 'y', 'z', 'timestamp'])
+            df.to_csv(self.pointcloud_waypoint_file, index=False)
+            self.get_logger().info("CSV file successfully saved.")
+
+            if self.grid_file != "":
+                self.save_calculate_data()
+                self.get_logger().info("Grid data succesfully saved.")
             
             # LWe clean the accumulated data.
             self.pointcloud_data = np.empty((0, 3), dtype=float)

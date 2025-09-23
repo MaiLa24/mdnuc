@@ -7,6 +7,38 @@ from shapely.geometry import Polygon, Point
 from shapely.ops import unary_union
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm, PowerNorm, BoundaryNorm, ListedColormap
+from mpl_toolkits.mplot3d import Axes3D
+
+def plot_flattened_with_height_labels(vertices_flat, z_orig_weighted, vertex_labels):
+    fig = plt.figure(figsize=(10, 6))
+    ax = fig.add_subplot(111, projection="3d")
+
+    sc = ax.scatter(vertices_flat[:, 0], vertices_flat[:, 1], vertices_flat[:, 2],
+                    c=z_orig_weighted, cmap='viridis', s=1)
+    plt.colorbar(sc, ax=ax, label="Estimated original height (Z)")
+    ax.set_title("Vertices of the flatten mesh coloured by original height")
+    plt.show()
+
+def plot_vertex_labels(vertices_flat, vertex_labels, title="Labels by height"):
+    fig = plt.figure(figsize=(10, 6))
+    ax = fig.add_subplot(111, projection="3d")
+
+    sc = ax.scatter(vertices_flat[:, 0], vertices_flat[:, 1], vertices_flat[:, 2],
+                    c=vertex_labels, cmap='tab10', s=1)
+    plt.colorbar(sc, ax=ax, label="Height label")
+    ax.set_title(title)
+    plt.show()
+
+def plot_submeshes(submeshes):
+    for i, mesh in enumerate(submeshes):
+        vertices = np.asarray(mesh.vertices)
+        if vertices.shape[0] == 0:
+            continue
+        fig = plt.figure(figsize=(6, 4))
+        ax = fig.add_subplot(111, projection="3d")
+        ax.scatter(vertices[:, 0], vertices[:, 1], vertices[:, 2], s=1)
+        ax.set_title(f"Submesh for interval #{i}")
+        plt.show()
 
 def label_flattened_by_original_heights(original_mesh_path, flattened_mesh_path, height_intervals):
     """
@@ -27,23 +59,27 @@ def label_flattened_by_original_heights(original_mesh_path, flattened_mesh_path,
     # Trasform the meshes to numpy arrays
     vertices_orig = np.asarray(original_mesh.vertices)
     vertices_flat = np.asarray(flattened_mesh.vertices)
-    triangles_flat = np.asarray(flattened_mesh.triangles)
+    triangles_flat = np.asarray(flattened_mesh.faces)
+
+    vertices_orig_xy = vertices_orig[:, :2]
+    vertices_flat_xy = vertices_flat[:, :2]
 
     # Create KDTree to search the closest Z height.
-    kdtree = cKDTree(vertices_orig)
+    kdtree = cKDTree(vertices_orig_xy)
     k = 3
-    dists, indexes = kdtree.query(vertices_flat, k=k)
-    weights = 1 / (dists + 1e-8)  # avoid division by zero
+    dists, indexes = kdtree.query(vertices_flat_xy, k=k)
+    weights = 1 / (dists + 1e-8)
     weights /= weights.sum(axis=1, keepdims=True)
 
-    # Weighted average height
     z_orig_weighted = np.sum(vertices_orig[indexes][:,:,2] * weights, axis=1)
+    #plot_flattened_with_height_labels(vertices_flat, z_orig_weighted, None)
 
     # Label with the average Z
     vertex_labels = np.full(len(vertices_flat), -1, dtype=int)
     for i, (zmin, zmax) in enumerate(height_intervals):
         mask = (z_orig_weighted >= zmin) & (z_orig_weighted < zmax)
         vertex_labels[mask] = i
+    #plot_vertex_labels(vertices_flat, vertex_labels, title="Labels by original height")
 
     # Label the triangles if all vertices are in the same Z label
     face_labels = np.full(len(triangles_flat), -1, dtype=int)
@@ -75,6 +111,8 @@ def label_flattened_by_original_heights(original_mesh_path, flattened_mesh_path,
         mesh.compute_vertex_normals()
 
         submeshes.append(mesh)
+        
+    #plot_submeshes(submeshes)
 
     return submeshes
 
@@ -241,8 +279,8 @@ def visualize_grid(grid_path, interval=None, paths=None):
     blues = plt.get_cmap('Blues', 256)
     blues_dark = blues(np.linspace(0.5, 1.0, n_variable))
     custom_colors = [
-        '#FF0000',  # red
-        '#FFFF00'   # yellow
+        '#7A8096',  # black
+        '#C4B385'   # light grey
     ]
 
     # Combine: [rojo, amarillo] + darker toner of Blues scheme
@@ -253,19 +291,29 @@ def visualize_grid(grid_path, interval=None, paths=None):
                     y_coords[0] - 0.05, y_coords[-1] + 0.05],
             vmin=interval[0],
             vmax=interval[1],
-            cmap='jet'
+            cmap=cmap
         )
     if not paths == None:
         for x, y in paths:
-            plt.plot(x, y, color='green', linewidth=0.03, marker='o', label='Path')
+            plt.plot(x, y, color='#9a5f51', linewidth=0.03, marker='o', label='Path', markersize=2)
 
-    plt.colorbar(label='Samples per cell')
-    plt.xlabel('X (m)')
-    plt.ylabel('Y (m)')
-    plt.title('Sampling coverage and density')
+    
+    for spine in plt.gca().spines.values():
+        spine.set_visible(False)
+
+    plt.xticks([])
+    plt.yticks([])
+
+    # Eliminar el grid
+    plt.grid(False)
+
+    #plt.colorbar(label='Samples per cell')
+    #plt.xlabel('X (m)')
+    #plt.ylabel('Y (m)')
+    #plt.title('Sampling coverage and density')
     plt.axis('equal')
-    plt.grid(True)
-    plt.legend()
+    plt.grid(False)
+    #plt.legend().remove
     plt.show()
 
 def grid_coverage_overlap(grid_path):
@@ -340,4 +388,3 @@ def merge_grids(paths, csv_path):
 
     # Saves the grid in a CSV file.
     df.to_csv(csv_path, index=False)
-
