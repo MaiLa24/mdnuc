@@ -22,6 +22,6 @@ The plugin must be indicated in the urdf file of the robot. For example:
   </gazebo>
 ```
 
-In the `urdf` folder, you can find a robot with the plugin already defined. Maybe you need to change the paths to the txt files.
+In the `urdf` folder, you can find a robot with the plugin already defined. You will need to change the paths to the txt files.
 
 Both the file with the waypoints and the file with the doors are created in the nuc_client package.
