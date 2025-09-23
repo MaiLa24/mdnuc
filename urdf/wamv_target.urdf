@@ -447,16 +447,6 @@
       <name>right</name>
     </plugin>
   </gazebo>
-
-  <gazebo>
-    <plugin name="gz::sim::systems::MyTrajectoryFollower" filename="libMyTrajectoryFollowerPlugin.so">
-      <link_name>wamv/base_link</link_name>
-      <force>600</force>
-      <torque>400</torque>
-      <waypoints_file>../waypoints.txt</waypoints_file>
-    </plugin>
-  </gazebo>
-
   <!--Gazebo Plugin for simulating WAM-V dynamics-->
   <gazebo>
     <!-- Left hull -->
@@ -534,7 +524,9 @@
     <plugin filename="gz-sim-joint-state-publisher-system" name="gz::sim::systems::JointStatePublisher">
     </plugin>
   </gazebo>
-  <gazebo>
+
+
+     <gazebo>
     <plugin filename="gz-sim-odometry-publisher-system" name="gz::sim::systems::OdometryPublisher">
       <dimensions>3</dimensions>
       <odom_publish_frequency>10.0</odom_publish_frequency>
@@ -542,6 +534,18 @@
       <robot_base_frame>wamv/base_link</robot_base_frame>
     </plugin>
   </gazebo>
+
+  <gazebo>
+    <plugin name="gz::sim::systems::MyTrajectoryFollower" filename="libMyTrajectoryFollowerPlugin.so">
+      <link_name>wamv/base_link</link_name>
+      <force>90</force>
+      <torque>90</torque>
+      <rangeTolerance>0.2</rangeTolerance>
+      <waypoints_file>/home/mlarrazabal/my_packages/waypoints.txt</waypoints_file>
+      <doors_file>/home/mlarrazabal/my_packages/waypoints_flags.txt</doors_file>
+    </plugin>
+  </gazebo> 
+
   <!-- Monocular Camera -->
   <link name="wamv/front_left_camera_link">
     <visual>
@@ -963,14 +967,14 @@
   </joint>
   <gazebo reference="wamv/lidar_wamv_link">
     <sensor name="multibeam_sensor_lidar_wamv" type="gpu_ray">
-      <update_rate>10</update_rate>
+      <update_rate>4</update_rate>
       <ray>
         <scan>
           <horizontal>
-            <samples>256</samples>
+            <samples>2500</samples>
             <resolution>1</resolution>
-            <min_angle>-1.0472</min_angle>
-            <max_angle>1.0472</max_angle>
+            <min_angle>-1.5707963267948966</min_angle>
+            <max_angle>1.5707963267948966</max_angle>
           </horizontal>
         </scan>
         <range>

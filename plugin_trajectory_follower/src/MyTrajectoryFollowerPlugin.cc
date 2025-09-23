@@ -64,11 +64,15 @@
    /// follower behavior or false to continue the trajectory.
    public: void OnPause(const msgs::Boolean &_paused);
  
-
-
+   /// \brief Load waypoints from a text file.
+   /// \param[in] _filename The name of the text file.
+   /// \return True if the waypoints were loaded successfully, false otherwise.
    public: bool LoadWaypointsFromFile(const std::string &filename);
  
-
+   /// \brief Load doors from a text file.
+    /// \param[in] _filename The name of the text file.
+    /// \return True if the doors were loaded successfully, false otherwise.
+   public: bool LoadDoorsFromFile(const std::string &filename);   
 
    /// \brief A mutex to protect the paused member.
    public: std::mutex mutex;
@@ -114,6 +118,10 @@
    /// \brief Vector containing waypoints as 3D vectors of doubles representing
    /// X Y, where X and Y are local (Gazebo) coordinates.
    public: std::vector<gz::math::Vector2d> localWaypoints;
+
+   /// \brief Vector containing doors as booleans representing if there is a door (true) or not (false)
+   /// at the corresponding waypoint in localWaypoints.
+   public: std::vector<bool> isDoor;
  
    /// \brief Initialization flag.
    public: bool initialized{false};
@@ -130,9 +138,12 @@
    /// \brief Force angular velocity to be zero when bearing is reached
    public: bool forceZeroAngVel = false;
 
-   // To define the publisher to send information to node pointcloud_saver
+   // To define the publisher to send trigger to node pointcloud_saver to save the pointcloud when the last waypoint is reached
     public: std::shared_ptr<rclcpp::Node> rosNode;
-    public: rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr rosPublisher;
+    public: rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr save_pointcloud_publisher;
+
+    public: rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr waypoint_achieved_publisher;
+    public: rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr door_crossed_publisher;
 
     // Number of waypoints
     public: int waypointNum = 1;
@@ -158,7 +169,10 @@
     rosNode = rclcpp::Node::make_shared("trajectory_follower_plugin");
 
     // Create the publisher to send a std_msgs::msg::Bool message. This is necessary for the pointcloud_saver node.
-    rosPublisher = rosNode->create_publisher<std_msgs::msg::Bool>("/save_pointcloud", 10);
+    save_pointcloud_publisher = rosNode->create_publisher<std_msgs::msg::Bool>("/save_pointcloud", 10);
+    // Create publishers to indicate when a waypoint is achieved and when a door is crossed
+    waypoint_achieved_publisher = rosNode->create_publisher<std_msgs::msg::Bool>("/waypoint_achieved", 10);
+    door_crossed_publisher = rosNode->create_publisher<std_msgs::msg::Bool>("/door_crossed", 10);
    
  
    std::string linkName = _sdf->Get<std::string>("link_name");
@@ -179,6 +193,16 @@
         if (!LoadWaypointsFromFile(waypointsFile))
         {
             gzerr << "Error loading waypoints from file." << std::endl;
+            return;
+        }
+    }
+
+    if (_sdf->HasElement("doors_file"))
+    {
+        std::string doorsFile = _sdf->Get<std::string>("doors_file");
+        if (!LoadDoorsFromFile(doorsFile))
+        {
+            gzerr << "Error loading door information from file." << std::endl;
             return;
         }
     }
@@ -239,7 +263,7 @@ bool MyTrajectoryFollowerPrivate::LoadWaypointsFromFile(const std::string &filen
     // Verify that the file has opened correctly
     if (!file.is_open())
     {
-        gzerr << "Error al abrir el archivo de waypoints: " << filename << std::endl;
+        gzerr << "Error when opening the waypoints file: " << filename << std::endl;
         return false;
     }
 
@@ -273,7 +297,44 @@ bool MyTrajectoryFollowerPrivate::LoadWaypointsFromFile(const std::string &filen
 
     return true;
  }
- 
+
+/////////////////////////////////////////////////
+bool MyTrajectoryFollowerPrivate::LoadDoorsFromFile(const std::string &filename)
+{
+    // We open the text file with the door information
+    std::ifstream file(filename);
+    
+    // Verify that the file has opened correctly
+    if (!file.is_open())
+    {
+        gzerr << "Error when opening the doors file: " << filename << std::endl;
+        return false;
+    }
+
+    // Read each line
+    std::string line;
+    while (std::getline(file, line)) 
+    {
+        std::stringstream ss(line);
+        bool value;
+
+        int temp;
+        ss >> temp;
+        value = (temp != 0);
+
+        this->isDoor.push_back(value);
+    }
+
+    file.close();
+
+    // Check that we have read at least one door
+    if (this->isDoor.empty())
+    {
+        gzerr << "No doors were read from the file." << std::endl;
+    }
+
+    return true;
+ }
  /////////////////////////////////////////////////
  void MyTrajectoryFollowerPrivate::OnPause(const msgs::Boolean &_paused)
  {
@@ -346,6 +407,20 @@ bool MyTrajectoryFollowerPrivate::LoadWaypointsFromFile(const std::string &filen
      
      std::cout << "Waypoint " << this->dataPtr->waypointNum << " reached!!" << std::endl;
 
+     std_msgs::msg::Bool msg;
+     msg.data = true;  // Send `true` to indicate that a waypoint has been reached.
+
+     // Publish the message in /waypoint_achieved topic
+     this->dataPtr->waypoint_achieved_publisher->publish(msg);
+
+
+     if (this->dataPtr->isDoor.front())
+     {
+         std::cout << "Door crossed!" << std::endl;
+         // Publish the message in /door_crossed topic
+         this->dataPtr->door_crossed_publisher->publish(msg);
+     }
+
      // We always keep the last waypoint in the vector to keep the model
      // "alive" in case it moves away from its goal.
      if (this->dataPtr->localWaypoints.size() == 1)
@@ -357,7 +432,7 @@ bool MyTrajectoryFollowerPrivate::LoadWaypointsFromFile(const std::string &filen
        msg.data = true;  // Send `true` to indicate that the last waypoint has been reached.
    
        // Publish the message in /save_pointcloud topic
-       this->dataPtr->rosPublisher->publish(msg);
+       this->dataPtr->save_pointcloud_publisher->publish(msg);
        this->dataPtr->localWaypoints.clear();
        return;
      }
@@ -368,12 +443,16 @@ bool MyTrajectoryFollowerPrivate::LoadWaypointsFromFile(const std::string &filen
        std::rotate(this->dataPtr->localWaypoints.begin(),
                    this->dataPtr->localWaypoints.begin() + 1,
                    this->dataPtr->localWaypoints.end());
+       std::rotate(this->dataPtr->isDoor.begin(),  
+                   this->dataPtr->isDoor.begin() + 1,
+                   this->dataPtr->isDoor.end());
      }
      else
      {
        // Remove the first waypoint.
        this->dataPtr->localWaypoints.erase(
          this->dataPtr->localWaypoints.begin());
+       this->dataPtr->isDoor.erase(this->dataPtr->isDoor.begin());
        this->dataPtr->waypointNum += 1;
      }
  

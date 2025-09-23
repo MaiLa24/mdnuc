@@ -25,16 +25,16 @@ They were created using ROS2 Humble.
 - [ ] Improve the rotation of the robot.
 - [ ] Launcher.
 - [ ] Add options to the commandline (txt file, pcd file)
-- [ ] Update urdf with the new trajectory follower.
+- [x] Update urdf with the new trajectory follower.
 - [ ] Update nuc_client
   - [ ] Add smoother
   - [ ] Add mdbaf
   - [ ] Add walls and doors
-- [ ] Update wamv_wayfinding
-  - [ ] Add lidar_filter
+- [x] Update wamv_wayfinding
+  - [x] Add lidar_filter
   - [x] Update pointlocud saver
 - [ ] Add nuc_ros2 modified (mdnuc_ros2)
-- [ ] Update trajectory follower
+- [x] Update trajectory follower
 - [ ] Update utils to generate walls and doors
   
 ## Installation
@@ -60,7 +60,7 @@ source install/setup.bash
 
 ## Before starting
 
-The `urdf` folder contains the model that is required for the controller in the wamv_wayfinding package to work properly.
+The `urdf` folder contains the model used during the paper. The WAMV is equipped with a LiDAR system featuring an 180-degree aperture angle and 2,500 beams. This is done so that it can be used with the lidar_angle_controller node from the wams_wayfinding package. The LiDAR update rate of 4 is ideal for obtaining approximately one reading every 10 centimeters of travel, as long as the trajectory follower speed parameters are not changed. The URDF contains an example of how to call the trajectory follower plugin.
 
 The `meshes` folder contains a mesh to use in with the nuc_client package.
 
@@ -88,6 +88,7 @@ Each package will have each Readme explaining in more detail the usage.
 
 In this package, you will find useful ROS2 nodes for obtaining information from VRX simulations. The ROS2 nodes are:
 
+- Lidar angle controller: To dynamically change the opening angle of the LiDAR simulating a multibeam echo sounder during runtime.
 - Pointcloud saver: To get information from the LiDAR simulating a single-beam sonar. With this information, updates the grid of the mesh and saves the resulting pointcloud.
 - Robot controller: To control the USV.
 
@@ -103,7 +104,7 @@ This is a plugin that is based in the Gazebo TrajectoryFollower plugin. It has b
 
 1. Instead of manually entering the waypoints one by one, a txt file is sent where each row indicates the coordinates of a waypoint (x, y).
 2. When the robot reaches the last waypoint, a message is sent to the /save_pointcloud topic. This is used in the pointcloud_saver node in the wamv_wayinding package.
-3. There is a new parameter called `doors_file`. This parameter is used in the lidar_filter node of the wamv_wayfinding package to notify when to change the LiDAR angle.
+3. There is a new parameter called `doors_file`. This parameter is used in the lidar_angle_controller node of the wamv_wayfinding package to notify when to change the LiDAR opening angle.
 
 #### utils
 
