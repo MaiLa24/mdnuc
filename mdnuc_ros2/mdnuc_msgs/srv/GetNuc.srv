@@ -1,0 +1,11 @@
+shape_msgs/Mesh mesh
+
+string frame_id
+
+mdnuc_msgs/PointArray[] shared_edges
+mdnuc_msgs/PointArray[] door_edges
+
+---
+
+nav_msgs/Path coverage
+bool[] is_door_path

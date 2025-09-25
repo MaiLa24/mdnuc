@@ -1,0 +1,13 @@
+shape_msgs/Mesh mesh
+
+string frame_id
+
+# With the given start pose, the algorithm will use the closest sub-facet centre as the start of the coverage path
+geometry_msgs/PoseStamped start_pose
+
+mdnuc_msgs/PointArray[] shared_edges
+mdnuc_msgs/PointArray[] door_edges
+
+---
+nav_msgs/Path coverage
+bool[] is_door_path
