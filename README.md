@@ -104,6 +104,8 @@ This is a plugin that is based in the Gazebo TrajectoryFollower plugin. It has b
 2. When the robot reaches the last waypoint, a message is sent to the /save_pointcloud topic. This is used in the pointcloud_saver node in the wamv_wayinding package.
 3. There is a new parameter called `doors_file`. This parameter is used in the lidar_angle_controller node of the wamv_wayfinding package to notify when to change the LiDAR opening angle.
 
+The waypoint and doors file is obtained with the mdnuc_client package. These are the two txt files that are created during execution.
+
 #### wamv_wayfinding package 
 
 In this package, you will find useful ROS2 nodes for obtaining information from VRX simulations. The ROS2 nodes are:
