@@ -1,4 +1,4 @@
-# ros2_packages_vrx
+# mdnuc_bathymetry_path_planner
 
 This repository contains the ros2 packages created for VRX.
 
