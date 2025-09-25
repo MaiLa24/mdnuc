@@ -24,16 +24,16 @@ They were created using ROS2 Humble.
 ## TODO list
 - [x] Connect 'robot_controller' and 'pointcloud_saver' nodes.
 - [ ] Improve the rotation of the robot.
-- [ ] Launchers.
-- [ ] Add options to the commandline (txt file, pcd file).
+- [x] Launchers.
+- [x] Add options to the commandline (txt file, pcd file).
 - [x] Update urdf with the new trajectory follower.
-- [ ] Update nuc_client.
-  - [ ] Add smoother.
-  - [ ] Add walls and doors.
+- [x] Update nuc_client.
+  - [x] Add smoother.
+  - [x] Add walls and doors.
 - [x] Update wamv_wayfinding.
   - [x] Add lidar_filter.
   - [x] Update pointlocud saver.
-- [ ] Add nuc_ros2 modified (mdnuc_ros2).
+- [x] Add nuc_ros2 modified (mdnuc_ros2).
 - [x] Update trajectory follower.
 - [x] Update utils to generate walls and doors.
   
