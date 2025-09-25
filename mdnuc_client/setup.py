@@ -1,6 +1,7 @@
 from setuptools import find_packages, setup
+from glob import glob
 
-package_name = 'nuc_client'
+package_name = 'mdnuc_client'
 
 setup(
     name=package_name,
@@ -10,6 +11,7 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        ('share/' + package_name + '/launch', glob('launch/*.py')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -19,8 +21,7 @@ setup(
     license='Apache-2.0',
     entry_points={
         'console_scripts': [
-            'nuc_client = nuc_client.nuc_client:main',
-            'path_reader = nuc_client.path_reader:main'
+            'mdnuc_client = mdnuc_client.mdnuc_client:main',
         ],
     },
 )

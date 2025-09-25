@@ -14,9 +14,10 @@ They were created using ROS2 Humble.
   - [Usage](#usage)
     - [lidar\_config](#lidar_config)
     - [Packages](#packages)
-      - [wamv\_wayfinding package](#wamv_wayfinding-package)
-      - [nuc\_client](#nuc_client)
+      - [mdnuc\_ros2](#mdnuc_ros2)
+      - [mdnuc\_client](#mdnuc_client)
       - [plugin\_trajectory\_following](#plugin_trajectory_following)
+      - [wamv\_wayfinding package](#wamv_wayfinding-package)
       - [utils](#utils)
 
 
@@ -83,17 +84,15 @@ Once the files are replaced, you can run the VRX `generate_wamv.launch.py` scrip
 
 Each package will have each Readme explaining in more detail the usage.
 
-#### wamv_wayfinding package 
+#### mdnuc_ros2
 
-In this package, you will find useful ROS2 nodes for obtaining information from VRX simulations. The ROS2 nodes are:
+This package is based on the package [nuc_ros2](https://github.com/ZJUTongYang/nuc_ros2). 
 
-- Lidar angle controller: To dynamically change the opening angle of the LiDAR simulating a multibeam echo sounder during runtime.
-- Pointcloud saver: To get information from the LiDAR simulating a single-beam sonar. With this information, updates the grid of the mesh and saves the resulting pointcloud.
-- Robot controller: To control the USV.
+It is meant to used together with the [mdnuc_client](./nuc_client/) package. In mdnuc_client there is a launcher that is responsible for calling the node that generates the path.
 
-#### nuc_client
+#### mdnuc_client
 
-This package is meant to be used along with the package [mdnuc_ros2](./mdnuc_ros2) which is based on the package [nuc_ros2](https://github.com/ZJUTongYang/nuc_ros2).
+This package is meant to be used along with the package [mdnuc_ros2](./mdnuc_ros2).
 
 In this package, you would find useful nodes to create the robot's path.
 
@@ -105,6 +104,14 @@ This is a plugin that is based in the Gazebo TrajectoryFollower plugin. It has b
 2. When the robot reaches the last waypoint, a message is sent to the /save_pointcloud topic. This is used in the pointcloud_saver node in the wamv_wayinding package.
 3. There is a new parameter called `doors_file`. This parameter is used in the lidar_angle_controller node of the wamv_wayfinding package to notify when to change the LiDAR opening angle.
 
+#### wamv_wayfinding package 
+
+In this package, you will find useful ROS2 nodes for obtaining information from VRX simulations. The ROS2 nodes are:
+
+- Lidar angle controller: To dynamically change the opening angle of the LiDAR simulating a multibeam echo sounder during runtime.
+- Pointcloud saver: To get information from the LiDAR simulating a single-beam sonar. With this information, updates the grid of the mesh and saves the resulting pointcloud.
+- Robot controller: To control the USV.
+  
 #### utils
 
 This folder contains utility Python scripts and helper functions that support the main functionality of the project. These scripts are not ROS nodes, but they provide reusable tools for tasks such as mesh processing and grid generation. You can import these utilities in your ROS nodes or use them as standalone scripts to streamline development and testing.
