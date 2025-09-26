@@ -25,10 +25,20 @@ class MDNUCClient(Node):
         self.mesh = self.get_parameter('mesh').get_parameter_value().string_value
 
         self.declare_parameter('blocked_edges', "blocked_edges.txt")
-        self.blocked_edges = self.get_parameter('blocked_edges').get_parameter_value().string_value
+        blocked_edges_file = self.get_parameter('blocked_edges').get_parameter_value().string_value
 
         self.declare_parameter('door_edges', "door_edges.txt")
-        self.door_edges = self.get_parameter('door_edges').get_parameter_value().string_value
+        door_edges_file = self.get_parameter('door_edges').get_parameter_value().string_value
+
+        if blocked_edges_file == "" or door_edges_file == "":
+            self.get_logger().error("blocked_edges and door_edges not provided. Generating path with NUC.")
+            self.blocked_edges = set()
+            self.door_edges = set()
+        else:
+            self.get_logger().info(f"Loading blocked edges from {blocked_edges_file} and door edges from {door_edges_file}")
+            self.get_logger().info("Generating path with MDNUC.")
+            self.blocked_edges = load_shared_edges_from_txt(blocked_edges_file)
+            self.door_edges = load_shared_edges_from_txt(door_edges_file)
 
         self.declare_parameter('start_point', "")
         self.start_point = self.get_parameter('start_point').get_parameter_value().string_value
@@ -132,6 +142,7 @@ class MDNUCClient(Node):
         self.request.frame_id = "map"
 
         shared_edges_msg = []
+        self.get_logger().info(self.blocked_edges)
         for edge in self.blocked_edges:
             v1, v2 = list(edge)
             pt1 = Point(x=v1[0], y=v1[1], z=v1[2])
