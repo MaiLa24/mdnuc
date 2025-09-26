@@ -1,4 +1,4 @@
-# ros2_packages_vrx
+# mdnuc_bathymetry_path_planner
 
 This repository contains the ros2 packages created for VRX.
 
@@ -24,16 +24,16 @@ They were created using ROS2 Humble.
 ## TODO list
 - [x] Connect 'robot_controller' and 'pointcloud_saver' nodes.
 - [ ] Improve the rotation of the robot.
-- [ ] Launchers.
-- [ ] Add options to the commandline (txt file, pcd file).
+- [x] Launchers.
+- [x] Add options to the commandline (txt file, pcd file).
 - [x] Update urdf with the new trajectory follower.
-- [ ] Update nuc_client.
-  - [ ] Add smoother.
-  - [ ] Add walls and doors.
+- [x] Update nuc_client.
+  - [x] Add smoother.
+  - [x] Add walls and doors.
 - [x] Update wamv_wayfinding.
   - [x] Add lidar_filter.
   - [x] Update pointlocud saver.
-- [ ] Add nuc_ros2 modified (mdnuc_ros2).
+- [x] Add nuc_ros2 modified (mdnuc_ros2).
 - [x] Update trajectory follower.
 - [x] Update utils to generate walls and doors.
   
@@ -103,6 +103,8 @@ This is a plugin that is based in the Gazebo TrajectoryFollower plugin. It has b
 1. Instead of manually entering the waypoints one by one, a txt file is sent where each row indicates the coordinates of a waypoint (x, y).
 2. When the robot reaches the last waypoint, a message is sent to the /save_pointcloud topic. This is used in the pointcloud_saver node in the wamv_wayinding package.
 3. There is a new parameter called `doors_file`. This parameter is used in the lidar_angle_controller node of the wamv_wayfinding package to notify when to change the LiDAR opening angle.
+
+The waypoint and doors file is obtained with the mdnuc_client package. These are the two txt files that are created during execution.
 
 #### wamv_wayfinding package 
 

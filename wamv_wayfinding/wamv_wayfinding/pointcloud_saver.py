@@ -39,7 +39,7 @@ class PoincloudSaver(Node):
         # Subscription to the desired topics: 
         self.subscription = self.create_subscription(
             PointCloud2,
-            self.de,
+            self.desired_pointcloud_topic,
             self.lidar_callback,
             10)
         self.create_subscription(Bool, '/save_pointcloud', self.save_pointcloud_callback, 10)
