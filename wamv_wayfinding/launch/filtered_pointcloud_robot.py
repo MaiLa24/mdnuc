@@ -47,21 +47,28 @@ def generate_launch_description():
         Node(
             package='wamv_wayfinding', 
             executable='robot_controller',
-            parameters=[LaunchConfiguration('waypoint_file')]
+            parameters=[{'waypoint_file': LaunchConfiguration('waypoint_file')}])]
             ),
-
+        
         Node(
             package='wamv_wayfinding', 
             executable='lidar_angle_controller',
-            parameters=[LaunchConfiguration('num_beams'), LaunchConfiguration('desired_angle_deg'), LaunchConfiguration('distance_ranges'), 
-                        LaunchConfiguration('angles_deg')]
+            parameters=[{
+                'num_beams': LaunchConfiguration('num_beams'),
+                'desired_angle_deg': LaunchConfiguration('desired_angle_deg'),
+                'distance_ranges': LaunchConfiguration('distance_ranges'),
+                'angles_deg': LaunchConfiguration('angles_deg'),
+            }]
             ),
         Node(
             package='wamv_wayfinding', 
             executable='pointcloud_saver',
-            parameters=[LaunchConfiguration('pointcloud_waypoint_file'), LaunchConfiguration('grid_file'), LaunchConfiguration('desired_pointcloud_topic')]
+            parameters=[{
+                'pointcloud_waypoint_file': LaunchConfiguration('pointcloud_waypoint_file'),
+                'grid_file': LaunchConfiguration('grid_file'),
+                'desired_pointcloud_topic': LaunchConfiguration('desired_pointcloud_topic'),
+            }]
             )
-        
         
 
     ])

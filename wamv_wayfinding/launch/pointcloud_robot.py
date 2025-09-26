@@ -29,13 +29,17 @@ def generate_launch_description():
         Node(
             package='wamv_wayfinding', 
             executable='robot_controller',
-            parameters=[LaunchConfiguration('waypoint_file')]
+            parameters=[{'waypoint_file': LaunchConfiguration('waypoint_file')}]
             ),
-
+            
         Node(
             package='wamv_wayfinding', 
             executable='pointcloud_saver',
-            parameters=[LaunchConfiguration('pointcloud_waypoint_file'), LaunchConfiguration('grid_file'), LaunchConfiguration('desired_pointcloud_topic')]
+            parameters=[{
+                'pointcloud_waypoint_file': LaunchConfiguration('pointcloud_waypoint_file'),
+                'grid_file': LaunchConfiguration('grid_file'),
+                'desired_pointcloud_topic': LaunchConfiguration('desired_pointcloud_topic'),
+            }]
             )
         
         

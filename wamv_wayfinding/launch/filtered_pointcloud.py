@@ -35,19 +35,27 @@ def generate_launch_description():
             description='The grid file where the coverage and overlapping data will be saved. It should be a .csv file. If you do not want to save this data, leave it empty.'),
         DeclareLaunchArgument(
             'desired_pointcloud_topic',
-            default_value='/wamv/sensors/lidars/multibeam_sensor_lidar_wamv/points',
+            default_value='/filtered_pointcloud',
             description='The PointCloud2 topic to be subscribed to. It should be a PointCloud2 message. The default topic is the one from the VRX wamv robot LiDAR sensor. If you want the filtered topic, use \\filtered_pointcloud.'),
         
         Node(
             package='wamv_wayfinding', 
             executable='lidar_angle_controller',
-            parameters=[LaunchConfiguration('num_beams'), LaunchConfiguration('desired_angle_deg'), LaunchConfiguration('distance_ranges'), 
-                        LaunchConfiguration('angles_deg')]
+            parameters=[{
+                'num_beams': LaunchConfiguration('num_beams'),
+                'desired_angle_deg': LaunchConfiguration('desired_angle_deg'),
+                'distance_ranges': LaunchConfiguration('distance_ranges'),
+                'angles_deg': LaunchConfiguration('angles_deg'),
+            }]
             ),
         Node(
             package='wamv_wayfinding', 
             executable='pointcloud_saver',
-            parameters=[LaunchConfiguration('pointcloud_waypoint_file'), LaunchConfiguration('grid_file'), LaunchConfiguration('desired_pointcloud_topic')]
+            parameters=[{
+                'pointcloud_waypoint_file': LaunchConfiguration('pointcloud_waypoint_file'),
+                'grid_file': LaunchConfiguration('grid_file'),
+                'desired_pointcloud_topic': LaunchConfiguration('desired_pointcloud_topic'),
+            }]
             )
         
         
