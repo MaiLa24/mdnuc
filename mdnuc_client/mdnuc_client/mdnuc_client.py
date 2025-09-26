@@ -142,7 +142,6 @@ class MDNUCClient(Node):
         self.request.frame_id = "map"
 
         shared_edges_msg = []
-        self.get_logger().info(self.blocked_edges)
         for edge in self.blocked_edges:
             v1, v2 = list(edge)
             pt1 = Point(x=v1[0], y=v1[1], z=v1[2])
