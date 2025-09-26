@@ -224,7 +224,7 @@ class PoincloudSaver(Node):
                 self.get_logger().info("Grid data succesfully saved.")
             
             # LWe clean the accumulated data.
-            self.pointcloud_data = np.empty((0, 3), dtype=float)
+            self.pointcloud_data = np.empty((0, 4), dtype=float)
 
 def main(args=None):
     rclpy.init(args=args)
