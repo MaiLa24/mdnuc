@@ -112,6 +112,20 @@ class PoincloudSaver(Node):
         self.get_logger().info(f"Average overlapping (redundancia): {overlapping:.2f}x")
         self.get_logger().info(f"Porcentaje de overlapping: {percent_overlap:.2f}%")
 
+        # Export to CSV
+        data = []
+        for i in range(self.ny):
+            for j in range(self.nx):
+                if self.grid[i, j] >= 0:
+                    data.append({
+                        "x": self.x_coords[j],
+                        "y": self.y_coords[i],
+                        "hits": self.grid[i, j]
+                    })
+
+        df = pd.DataFrame(data)
+        df.to_csv(self.grid_file, index=False)
+
 
     def odom_callback(self, msg):
         '''
