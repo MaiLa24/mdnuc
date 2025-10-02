@@ -9,11 +9,19 @@ import sensor_msgs_py.point_cloud2 as pc2
 import math
 from pyquaternion import Quaternion
 import pandas as pd
+import time
 
 LIDAR_ROLL = math.pi # Roll angle of the LiDAR
 LIDAR_PITCH = math.pi/ 2 # Pitch angle of the LiDAR
 LIDAR_YAW = 0 # YAW angle of the LiDAR
 
+
+def format_time(seconds: float) -> str:
+    seconds = int(seconds)
+    days, seconds = divmod(seconds, 86400)
+    hours, seconds = divmod(seconds, 3600)
+    minutes, seconds = divmod(seconds, 60)
+    return f"{days:02}:{hours:02}:{minutes:02}:{seconds:02}"
 
 class PoincloudSaver(Node):
     def __init__(self):
@@ -51,6 +59,8 @@ class PoincloudSaver(Node):
         )
         self.get_logger().info("Node subscribed to topics")
 
+        self.start = True
+
         # The matrix used to convert from the lidars coordinates system to the global coordinates system.
         self.T = None
 
@@ -74,6 +84,7 @@ class PoincloudSaver(Node):
         self.grid = grid_df.to_numpy()
 
         self.total_valid_cells = np.sum(self.grid >= 0)
+        self.get_logger().info(f"Grid loaded from {file_path} with shape {self.grid.shape}")
 
     def _nearest(self, coord_array, coord):
         idx = (np.abs(coord_array - coord)).argmin()
@@ -97,9 +108,9 @@ class PoincloudSaver(Node):
         overlapping = (total_samples / covered_cells - 1) if covered_cells > 0 else 0
         percent_overlap = np.sum(self.grid > 1) / self.total_valid_cells * 100
 
-        print(f"Coverage: {coverage:.2f}%")
-        print(f"Average overlapping (redundancia): {overlapping:.2f}x")
-        print(f"Porcentaje de overlapping: {percent_overlap:.2f}%")
+        self.get_logger().info(f"Coverage: {coverage:.2f}%")
+        self.get_logger().info(f"Average overlapping (redundancia): {overlapping:.2f}x")
+        self.get_logger().info(f"Porcentaje de overlapping: {percent_overlap:.2f}%")
 
 
     def odom_callback(self, msg):
@@ -199,6 +210,10 @@ class PoincloudSaver(Node):
         self.pointcloud_data = np.vstack([self.pointcloud_data, points_with_time])        
         self.get_logger().info(f"Accumulated data: {len(self.pointcloud_data)} points")
 
+        if self.start:
+            self.start = False
+            self.start_time = time.time()
+
         if self.grid_file != "":
             # We register the points in the grid
             for point in self.current_lidar_point:
@@ -213,6 +228,7 @@ class PoincloudSaver(Node):
         if msg.data:
         # If the bool message is True, we keep the point cloud
             self.get_logger().info("Saving point cloud to CSV file...")
+            end_time = time.time()
             
             # Save the pointclouud to a CSV file
             df = pd.DataFrame(self.pointcloud_data, columns=['x', 'y', 'z', 'timestamp'])
@@ -222,9 +238,14 @@ class PoincloudSaver(Node):
             if self.grid_file != "":
                 self.save_calculate_data()
                 self.get_logger().info("Grid data succesfully saved.")
+
+            elapsed_time = end_time - self.start_time
+            formatted = format_time(elapsed_time)
+
+            self.get_logger().info(f'Run time: {formatted}')
             
             # LWe clean the accumulated data.
-            self.pointcloud_data = np.empty((0, 3), dtype=float)
+            self.pointcloud_data = np.empty((0, 4), dtype=float)
 
 def main(args=None):
     rclpy.init(args=args)
