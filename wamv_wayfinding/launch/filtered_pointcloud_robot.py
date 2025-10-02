@@ -47,7 +47,7 @@ def generate_launch_description():
         Node(
             package='wamv_wayfinding', 
             executable='robot_controller',
-            parameters=[{'waypoint_file': LaunchConfiguration('waypoint_file')}])]
+            parameters=[{'waypoint_file': LaunchConfiguration('waypoint_file')}]
             ),
         
         Node(
