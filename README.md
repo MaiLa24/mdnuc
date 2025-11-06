@@ -74,6 +74,7 @@ In the `lidar_config` folder, you can found 4 files. The `lidar_config.yaml` fil
 
 The other 3 files must replace the corresponding file in the folder where the VRX repository was saved. The paths to the files are as follows:
 
+- `bounding_boxes.yaml`: /path/to/vrx/vrx_urdf/vrx_gazebo/config/wamv_config/component_compliance/bounding_boxes.yaml
 - `lidar.xacro`: /path/to/vrx/vrx_urdf/wamv_gazebo/urdf/components/lidar.xacro
 - `numeric.yaml`: /path/to/vrx/vrx_urdf/vrx_gazebo/config/wamv_config/component_compliance/numeric.yaml
 - `wamv_planar_lidar.xacro`: /path/to/vrx/vrx_urdf/wamv_gazebo/urdf/components/wamv_planar_lidar.xacro
