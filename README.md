@@ -60,6 +60,8 @@ source install/setup.bash
 
 ## Before starting
 
+This code has been generated and tested with ROS2 Humble and Gazebo Garden. If you are using any other version of ROS2 or Gazebo, there may be errors when compiling the code.
+
 The `urdf` folder contains the model used during the paper. The WAMV is equipped with a LiDAR system featuring an 180-degree aperture angle and 2,500 beams. This is done so that it can be used with the lidar_angle_controller node from the wams_wayfinding package. The LiDAR update rate of 4 is ideal for obtaining approximately one reading every 10 centimeters of travel, as long as the trajectory follower speed parameters are not changed. The URDF contains an example of how to call the trajectory follower plugin.
 
 The `meshes` folder contains a mesh to use in with the nuc_client package.
