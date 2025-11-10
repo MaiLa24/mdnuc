@@ -1,6 +1,6 @@
 # mdnuc_bathymetry_path_planner
 
-This repository contains the ros2 packages created for VRX.
+This repository contains the ROS2 packages created for VRX.
 
 They were created using ROS2 Humble.
 
