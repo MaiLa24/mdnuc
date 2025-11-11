@@ -135,7 +135,7 @@ class PoincloudSaver(Node):
         orientation = msg.pose.pose.orientation
         
         # The position of the robot
-        t = np.array([position.x, position.y, 1]) # Z is always 1, because the water is at height 0.
+        t = np.array([position.x, position.y, position.z])
         
         # The rotation of the robot
         q = Quaternion(orientation.w, orientation.x, orientation.y, orientation.z)
