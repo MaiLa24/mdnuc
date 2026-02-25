@@ -120,3 +120,15 @@ In this package, you will find useful ROS2 nodes for obtaining information from 
 #### utils
 
 This folder contains utility Python scripts and helper functions that support the main functionality of the project. These scripts are not ROS nodes, but they provide reusable tools for tasks such as mesh processing and grid generation. You can import these utilities in your ROS nodes or use them as standalone scripts to streamline development and testing.
+
+## Cite this paper
+
+```
+@conference{mdnuc,
+  title={Multi-Depth Uniform Coverage Path Planning for Unmanned Surface Vehicle Surveying},
+  author={Larrazabal, Maider and Yang, Tong and Goienetxea, Izaro and Valls Miro, Jaime},
+  booktitle={2026 IEEE International Conference on Robotics and Automation (ICRA)},
+  year={2026},
+  note={to appear}
+}
+```
