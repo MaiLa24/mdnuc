@@ -91,7 +91,7 @@ Each package will have each Readme explaining in more detail the usage.
 
 This package is based on the package [nuc_ros2](https://github.com/ZJUTongYang/nuc_ros2). 
 
-It is meant to used together with the [mdnuc_client](./nuc_client/) package. In mdnuc_client there is a launcher that is responsible for calling the node that generates the path.
+It is meant to used together with the [mdnuc_client](./mdnuc_client/) package. In mdnuc_client there is a launcher that is responsible for calling the node that generates the path.
 
 #### mdnuc_client
 
