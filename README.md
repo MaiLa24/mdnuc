@@ -6,7 +6,7 @@ They were created using ROS2 Humble.
 
 ## Table of contents
 
-- [ros2\_packages\_vrx](#ros2_packages_vrx)
+- [mdnuc\_bathymetry\_path\_planner(#mdnuc_bathymetry_path_planner)
   - [Table of contents](#table-of-contents)
   - [TODO list](#todo-list)
   - [Installation](#installation)
@@ -42,8 +42,8 @@ They were created using ROS2 Humble.
 First, clone the repository to your local machine:
 
 ```bash
-git clone https://github.com/MaiLa24/ros2_packages_vrx.git
-cd ros2_packages_vrx
+git clone https://github.com/MaiLa24/mdnuc.git
+cd mdnuc
 ```
 
 Then compile the packages:
