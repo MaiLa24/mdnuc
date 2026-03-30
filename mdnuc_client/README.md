@@ -20,7 +20,7 @@ ros2 launch mdnuc_client mdnuc_path_generator.py
 If you want to modify the values of any parameter:
 
 ```bash
-ros2 launch wamv_wayfinding mdnuc_path_generator.py <parameter_name>:=<new_value> <parameter_name>:=<new_value> ... 
+ros2 launch mdnuc_client mdnuc_path_generator.py <parameter_name>:=<new_value> <parameter_name>:=<new_value> ... 
 ```
 
 # Parameters
