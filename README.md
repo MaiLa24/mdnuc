@@ -6,7 +6,7 @@ They were created using ROS2 Humble.
 
 ## Table of contents
 
-- [mdnuc\_bathymetry\_path\_planner(#mdnuc_bathymetry_path_planner)
+- [mdnuc\_bathymetry\_path\_planner](#mdnuc_bathymetry_path_planner)
   - [Table of contents](#table-of-contents)
   - [TODO list](#todo-list)
   - [Installation](#installation)
