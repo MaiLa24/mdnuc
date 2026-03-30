@@ -1,6 +1,6 @@
 # Introduction
 
-This package is meant to be used along with the package [nuc_ros2](../nuc_ros2) which is based on the package [nuc_ros2](https://github.com/ZJUTongYang/nuc_ros2).
+This package is meant to be used along with the package [mdnuc_ros2](../mdnuc_ros2) which is based on the package [nuc_ros2](https://github.com/ZJUTongYang/nuc_ros2).
 
 In this package, you would find useful nodes to create the robot's path.
 
