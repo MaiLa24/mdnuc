@@ -19,6 +19,7 @@ They were created using ROS2 Humble.
       - [plugin\_trajectory\_following](#plugin_trajectory_following)
       - [wamv\_wayfinding package](#wamv_wayfinding-package)
       - [utils](#utils)
+  - [Cite this paper](#cite-this-paper)
 
 
 ## TODO list
