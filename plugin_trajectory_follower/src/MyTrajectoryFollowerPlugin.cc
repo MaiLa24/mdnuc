@@ -202,8 +202,8 @@
         std::string doorsFile = _sdf->Get<std::string>("doors_file");
         if (!LoadDoorsFromFile(doorsFile))
         {
-            gzerr << "Error loading door information from file." << std::endl;
-            return;
+            gzerr << "Doors file missing, assuming no doors." << std::endl;
+            this->isDoor.assign(this->localWaypoints.size(), false);
         }
     }
  
