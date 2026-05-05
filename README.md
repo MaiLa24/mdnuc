@@ -130,6 +130,6 @@ This folder contains utility Python scripts and helper functions that support th
   author={Larrazabal, Maider and Yang, Tong and Goienetxea, Izaro and Valls Miro, Jaime},
   booktitle={2026 IEEE International Conference on Robotics and Automation (ICRA)},
   year={2026},
-  note={to appear}
+  note={in press}
 }
 ```
