@@ -125,12 +125,14 @@ This folder contains utility Python scripts and helper functions that support th
 ## Cite this paper
 
 ```
-@conference{mdnuc,
-  title={Multi-Depth Uniform Coverage Path Planning for Unmanned Surface Vehicle Surveying},
-  author={Larrazabal, Maider and Yang, Tong and Goienetxea, Izaro and Valls Miro, Jaime},
-  booktitle={2026 IEEE International Conference on Robotics and Automation (ICRA)},
+@INPROCEEDINGS{mdnuc,
+  author={Larrazabal, Maider and Yang, Tong and Goienetxea, Izaro and Miro, Jaime Valls},
+  booktitle={2026 IEEE International Conference on Robotics and Automation (ICRA)}, 
+  title={Multi-Depth Uniform Coverage Path Planning for Unmanned Surface Vehicle Surveying}, 
   year={2026},
-  note={In press. Preprint available at arXiv:2605.13123},
-  eprint={2605.13123}
-}
+  volume={},
+  number={},
+  pages={5382-5389},
+  keywords={Surfaces;Printing;Path planning;Surveys;Algorithms;Underactuated surface vessels;Sea floor;Distance measurement;Planning;Autonomous vehicles},
+  doi={10.1109/ICRA57385.2026.11696941}}
 ```
